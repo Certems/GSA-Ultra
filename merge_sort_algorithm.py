@@ -29,19 +29,19 @@ def merge_sort(my_list):
             for j in range(group_size):
                 sub_1.append(my_list[i+j])
                 sub_2.append(my_list[i+group_size+j])
-            print("sub_1: ", sub_1)
-            print("sub_2: ", sub_2)
-            print("")
-            print("")
+            #print("sub_1: ", sub_1)
+            #print("sub_2: ", sub_2)
+            #print("")
+            #print("")
             sorted_list = pairwise_sorting(sub_1,sub_2)
 
             for value in sorted_list:
                 new_list.append( value )
         my_list = new_list
-        print("my_list: ", my_list)
+        #print("my_list: ", my_list)
         group_size *= 2
     my_list = my_list[0:len(my_list)-diff]
-    print("Final List: ", my_list)
+    #print("Final List: ", my_list)
     
 
 def pairwise_sorting(list1,list2):
@@ -58,7 +58,3 @@ def pairwise_sorting(list1,list2):
         for value in list1:
             return_list.append( value )
     return return_list
-
-
-
-merge_sort([2,3,8,9,1,4,5,7,6])
