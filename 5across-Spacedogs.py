@@ -1,100 +1,106 @@
-#import pickle
-import math
-#masses = [5,2,1]
-#locations = [(1,),(6,),(7,)]
+#masses = [2,6,1,8,4,32,2] #Solution Unknown
+#locations = [(10,),(9,),(1,),(2,),(7,),(16,),(50,)]
+#masses = [5,2,1] #Solution 3 or 3.75
+#locations = [(1,),(6,),(7,)] 
 
-#masses = pickle.load(open("sl_spacedogs.pkl","rb"))[0]
-#locations = pickle.load(open("sl_spacedogs.pkl","rb"))[1]
+import math
 
 def solution(masses, locations):
 
-    ##BUBBLESORT (masses and locations) INEFFICIENT, BETTER WITH MERGE SORT
-    mItem = 0#Moving item
+    #Sort dogs into ascending order
+    moveItem = 0
     while True:
-        valSwitch = False#Check for any movement in a given cycle
-        for indDog in range(len(masses)):
-            if indDog+1 < len(masses):#If not overflowing
-                if masses[indDog] > masses[indDog+1]:
-                    mItem = masses.pop(indDog+1)
-                    masses.insert(indDog,mItem)
-                    mItem = locations.pop(indDog+1)
-                    locations.insert(indDog,mItem)
-                    valSwitch = True#movement occured in given cycle
-        if valSwitch == False:
+        switched = False
+        for dogInd in range(len(masses)):
+            if dogInd +1 < len(masses):
+                if masses[dogInd +1] < masses[dogInd]:
+                    moveItem = masses.pop(dogInd +1)
+                    masses.insert(dogInd, moveItem)
+                    moveItem = locations.pop(dogInd +1)
+                    locations.insert(dogInd, moveItem)
+                    switched = True
+        if switched == False:
             break
-    ##BUBBLESORT
+    #Establish number of dimensions
+    DimensionNumber = len(locations[0])
+    #print("SortedMasses: ",masses)
+    #print("SortedLocations: ",locations)
+    #print("DimensionNumber: ",DimensionNumber)
     
-    #Find dimensions
-    dogDim = len( locations[0] ) #Number of coords for any given spacedog => number of dimensions
-        
     while True:
-        dist = 0
-        #Find smallest dog
-        smallDog = 0#1st (0th index) dog is always smallest (sorted)
+        #Establish smallest dog
+        smallestDog = 0
+        #print("-----")
+        #print("massesStart: ",masses)
+        #print("locationsStart: ",locations)
         
-        #Find dog to fight ( find closest dog )
-        Cdist = 0 #Current iterations distance
-        Sdist = 99999999999999999999999999 #Shortest distance for given dog
-        closeDog = 0#smallDog's closest dog
-        winDog = 0#The dog which wins fight
-        for oppDog in range(len(masses)):
-            if oppDog == smallDog:#Skip fighting yourself MIGHT NEED END CASE E.G IF LAST ELEMENT MAY BREAK WHEN CONTINUING
-                continue
-            for coord in range(dogDim):
-                dist = ( ( locations[smallDog][coord]  -  locations[oppDog][coord] ) )**2#Pythag for abs leng
-                Cdist += dist
-            Cdist = Cdist**(1/2)
-            if Cdist < Sdist: # CURRENTLY NO EDGECASE RESOLUTION ** e.g multiple same dist is first come first serve
-                closeDog = oppDog
-                Sdist = Cdist
-                
-        #Opponent ( close ) dog always wins
-        newMass = masses[closeDog] + masses[smallDog]
+        #Find closest dog
+        coordMagFinLowest = 999999999999999999999999999999999999
+        closestDog = 0
+        for dogInd in range(len(masses)):
+            coordMag = 0
+            coordMagTot = 0
+            coordMagFinNew = 0
+            if dogInd == 0:
+                continue #Skip smallest dog
+            for coord in range(DimensionNumber):
+                coordMag = ( (locations[smallestDog][coord]) -  (locations[dogInd][coord]) )**2
+                coordMagTot += coordMag
+            coordMagFinNew = ( coordMagTot )**(1/2)
+            if coordMagFinNew < coordMagFinLowest:
+                coordMagFinLowest = coordMagFinNew
+                closestDog = dogInd
 
-        #Move winning dog to middle
+        #Find mass of new dog
+        newMass = masses[smallestDog]+masses[closestDog]
         
-        Fcoords = ()
-        for coords in range(dogDim):
-            Ccoord = []
-            Ccoord.append( math.floor(( locations[smallDog][coords] + locations[closeDog][coords] )/2 ) )
-            Fcoords = Fcoords + tuple(Ccoord)
-
-        #Remove both dogs
-        masses.pop(closeDog)
-        masses.pop(smallDog)#Should always pop 0
-        locations.pop(closeDog)
-        locations.pop(smallDog)#Should always pop 0
-        #e.g [{a},b,c,{d},e,f,g] --> [b,c,e,f,g], checking up from (and including) e, index 2, counting 3 times (in terms of masses)
-
-        #Remove from list and re-place newDog (closeDog) into correct place in masses (ordered)
-        for indDog in range( len(masses) - closeDog+1 ):#Check all dogs after close dog, because mass only gets larger
-            upperCase = (newMass <= masses[indDog + closeDog-1])
-            lowerCase = (newMass >= masses[indDog + closeDog-2])
-            finalCase = upperCase and lowerCase
-            if closeDog == 1:
-                masses.insert(0,  newMass)
-                locations.insert(0, Fcoords)
-                break
-            if finalCase == True:#If it fits inbetween the masses
-                masses.insert((indDog + closeDog-1),    newMass)
-                locations.insert((indDog + closeDog-1),  Fcoords)
-                break
-            if indDog == len(masses) -1:#DOG AT END OF THE LINE
+        #Find midpoint of both dogs
+        finalCoords = ()
+        for coord in range(DimensionNumber):
+            currentCoord = []
+            currentCoord.append(  math.floor(( ( locations[smallestDog][coord] ) + ( locations[closestDog][coord] ) )/2)   )
+            finalCoords = finalCoords + tuple(currentCoord)
+            #print("currentCoord(Mid): ",currentCoord)
+            #print("finalCoords(Mid): ",finalCoords)
+        
+        #Insert new winning dog
+        #print("newMass: ",newMass)
+        for dogInd in range( len(masses) - closestDog ):
+            if ( (dogInd +closestDog +1) == len(masses) ): #Last element of list => by now it is the largest
                 masses.append(newMass)
-                locations.append(Fcoords)
+                locations.append(finalCoords)
                 break
-        if len(masses) == 0:
-            masses.append( newMass)
-            locations.append(Fcoords)
+            lowerBound = masses[dogInd +closestDog] < newMass
+            upperBound = masses[dogInd +closestDog +1] > newMass
+            if ( (lowerBound) and (upperBound) ): #If it just fits somewhere in the middle of the list
+                masses.insert(dogInd +closestDog+1, newMass)
+                locations.insert(dogInd +closestDog+1, finalCoords)
+                break
 
-        #Now loop cycle ( until one left )
-        if len( masses ) == 1:
+        #Remove both old dogs
+        #print("---->>")
+        #print("Adding mass ",newMass)
+        #print("Removing index ",closestDog," and ",smallestDog)
+        #print(masses)
+        masses.pop(closestDog) #Masses and locations should have unchanged indexs because newMass always inserted after previous two
+        #print(masses)
+        masses.pop(smallestDog)
+        #print(masses)
+        locations.pop(closestDog) #(Both smallestDogs should both just be 0)
+        locations.pop(smallestDog)
+
+        #Check for one dog left, if so then break
+        if len(masses) == 1:
             break
+    #Find coord sum for remaining dog
+    #print("m2: ",masses)
+    #print("loc2: ",locations)
+    coordTot = 0
+    for coord in range(DimensionNumber):
+        #print("locations[0][coord]: ",locations[0][coord])
+        coordTot += locations[0][coord]
+        
+    #Return coord sum
+    return coordTot
 
-    #Output sum of coords
-    sumation = 0
-    for coords in range(dogDim):
-        sumation += (locations[0][coords])
-    return sumation
-
-#print( solution(masses, locations) )
+#print ( solution(masses, locations) )
